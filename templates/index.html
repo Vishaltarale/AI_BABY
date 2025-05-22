@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talking Ai-Baby</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 20px;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            background-image: url('/static/avatar.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: relative;
+        }
+
+        .avatar-mouth {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            background-color: #ff6b6b;
+            border-radius: 30px 30px 60px 60px;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            transform-origin: center center;
+            transition: height 0.1s;
+        }
+
+        .avatar.talking .avatar-mouth {
+            animation: talk 0.3s infinite alternate;
+        }
+
+        @keyframes talk {
+            0% { height: 10px; border-radius: 30px 30px 10px 10px; }
+            100% { height: 40px; border-radius: 30px 30px 60px 60px; }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background-color: #4a80f5;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 200px;
+        }
+
+        .btn:hover {
+            background-color: #3a70e5;
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-record {
+            background-color: #ff5252;
+        }
+
+        .btn-record.recording {
+            background-color: #ff0000;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 82, 82, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 82, 82, 0); }
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px 15px;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            max-width: 80%;
+            min-height: 20px;
+        }
+
+        .speech-bubble {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 80%;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+        }
+
+        .speech-bubble.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border: 15px solid transparent;
+            border-top-color: white;
+            border-bottom: 0;
+            margin-left: -15px;
+            margin-bottom: -15px;
+        }
+
+        .eyes {
+            position: absolute;
+            top: 100px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+        }
+
+        .eye {
+            width: 30px;
+            height: 30px;
+            background-color: #333;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .eye:before {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: white;
+            border-radius: 50%;
+            top: 5px;
+            left: 5px;
+        }
+        
+        .loading {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 20px;
+        }
+        
+        .loading div {
+            position: absolute;
+            top: 0;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #4a80f5;
+            animation-timing-function: cubic-bezier(0, 1, 1, 0);
+        }
+        
+        .loading div:nth-child(1) {
+            left: 8px;
+            animation: loading1 0.6s infinite;
+        }
+        
+        .loading div:nth-child(2) {
+            left: 8px;
+            animation: loading2 0.6s infinite;
+        }
+        
+        .loading div:nth-child(3) {
+            left: 32px;
+            animation: loading2 0.6s infinite;
+        }
+        
+        .loading div:nth-child(4) {
+            left: 56px;
+            animation: loading3 0.6s infinite;
+        }
+        
+        @keyframes loading1 {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes loading2 {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(24px, 0); }
+        }
+        
+        @keyframes loading3 {
+            0% { transform: scale(1); }
+            100% { transform: scale(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="avatar-container">
+            <div class="avatar" id="avatar">
+                <div class="eyes">
+                    <div class="eye"></div>
+                    <div class="eye"></div>
+                </div>
+                <div class="avatar-mouth"></div>
+            </div>
+        </div>
+        
+        <div class="speech-bubble" id="speech-bubble">
+            {% if res %}
+                {{ res }}
+            {% endif %}
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-record" id="recordButton">Hold to Speak</button>
+            <div class="status" id="status">
+                {% if said %}
+                    You said: {{ said }}
+                {% else %}
+                    Ready to listen...
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const avatar = document.getElementById('avatar');
+        const recordButton = document.getElementById('recordButton');
+        const statusElement = document.getElementById('status');
+        const speechBubble = document.getElementById('speech-bubble');
+        
+        let isRecording = false;
+        let mediaRecorder;
+        let audioChunks = [];
+        
+        // Show response if available from server-side (template variables)
+        {% if res %}
+            speechBubble.classList.add('show');
+            // Animate avatar talking (duration based on text length)
+            const duration = Math.min(5000, 1000 + ("{{ res }}".length * 50));
+            animateTalking(duration);
+            
+            // Hide speech bubble after some time
+            setTimeout(() => {
+                speechBubble.classList.remove('show');
+            }, duration + 2000);
+        {% endif %}
+        
+        // Function to convert audio to proper format
+        function convertToMono(audioBuffer) {
+            // Create a mono buffer
+            const numFrames = audioBuffer.length;
+            const result = new Float32Array(numFrames);
+            
+            // Mix down to mono
+            for (let i = 0; i < numFrames; i++) {
+                result[i] = audioBuffer[i];
+            }
+            
+            return result;
+        }
+        
+        // Function to downsample audio
+        function downsampleBuffer(buffer, sampleRate, outSampleRate) {
+            if (outSampleRate === sampleRate) {
+                return buffer;
+            }
+            
+            const sampleRateRatio = sampleRate / outSampleRate;
+            const newLength = Math.round(buffer.length / sampleRateRatio);
+            const result = new Float32Array(newLength);
+            
+            let offsetResult = 0;
+            let offsetBuffer = 0;
+            
+            while (offsetResult < result.length) {
+                const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+                let accum = 0, count = 0;
+                
+                for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+                    accum += buffer[i];
+                    count++;
+                }
+                
+                result[offsetResult] = accum / count;
+                offsetResult++;
+                offsetBuffer = nextOffsetBuffer;
+            }
+            
+            return result;
+        }
+        
+        // Send audio to FastAPI backend
+        async function processAudio(audioBlob) {
+            // Show loading indicator
+            statusElement.innerHTML = '<div class="loading"><div></div><div></div><div></div><div></div></div> Processing...';
+            
+            try {
+                // Send to your FastAPI backend endpoint
+                const response = await fetch('/process-audio', {
+                    method: 'POST',
+                    body: audioBlob,
+                    headers: {
+                        'Content-Type': 'audio/wav'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server responded with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error processing audio:', error);
+                statusElement.textContent = 'Error processing audio. Please try again.';
+                return {
+                    userText: "Error processing speech",
+                    aiResponse: "I'm sorry, I couldn't process that. Could you try again?"
+                };
+            }
+        }
+        
+        function animateTalking(duration) {
+            avatar.classList.add('talking');
+            setTimeout(() => {
+                avatar.classList.remove('talking');
+            }, duration);
+        }
+        
+        function showResponse(response) {
+            // Update speech bubble
+            speechBubble.textContent = response;
+            speechBubble.classList.add('show');
+            
+            // Animate avatar talking (duration based on text length)
+            const duration = Math.min(5000, 1000 + (response.length * 50));
+            animateTalking(duration);
+            
+            // Cancel any existing speech
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            
+            // Text-to-speech if available
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(response);
+                utterance.rate = 1.0;  // Speech rate
+                utterance.pitch = 1.2; // Higher pitch for child-like voice
+                utterance.volume = 1.0; // Volume
+                
+                // Get available voices and select a suitable one
+                const voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    // Try to find a child-like or female voice
+                    const preferredVoice = voices.find(voice => 
+                        voice.name.toLowerCase().includes('female') || 
+                        voice.name.toLowerCase().includes('girl') ||
+                        voice.name.toLowerCase().includes('child')
+                    ) || voices[0]; // Default to first voice if none found
+                    
+                    utterance.voice = preferredVoice;
+                }
+                
+                // Show mouth animation for duration of speech
+                utterance.onstart = () => {
+                    avatar.classList.add('talking');
+                };
+                
+                utterance.onend = () => {
+                    avatar.classList.remove('talking');
+                    // Hide speech bubble after speech ends
+                    setTimeout(() => {
+                        speechBubble.classList.remove('show');
+                    }, 1000);
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                // If speech synthesis is not available, use the timer-based approach
+                setTimeout(() => {
+                    speechBubble.classList.remove('show');
+                }, duration + 2000);
+            }
+        }
+        
+        function startRecording() {
+            isRecording = true;
+            recordButton.classList.add('recording');
+            recordButton.textContent = 'Listening...';
+            statusElement.textContent = 'I can hear you...';
+            
+            // Start actual recording with better audio quality for speech recognition
+            navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 44100 // Higher sample rate for better quality
+                } 
+            })
+            .then(stream => {
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm', // WebM is widely supported
+                    audioBitsPerSecond: 128000 // Higher bitrate for better quality
+                });
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        audioChunks.push(e.data);
+                    }
+                };
+                
+                // Request data at frequent intervals
+                mediaRecorder.start(100);
+            })
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
+                statusElement.textContent = 'Error accessing microphone. Please check permissions.';
+                isRecording = false;
+                recordButton.classList.remove('recording');
+                recordButton.textContent = 'Hold to Speak';
+            });
+        }
+        
+        async function stopRecording() {
+            isRecording = false;
+            recordButton.classList.remove('recording');
+            recordButton.textContent = 'Hold to Speak';
+            
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                
+                mediaRecorder.onstop = async () => {
+                    // Create audio blob from recorded chunks
+                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+                    
+                    // Convert to WAV format for better compatibility with speech recognition
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const fileReader = new FileReader();
+                    
+                    fileReader.onload = async function() {
+                        try {
+                            // Decode the audio data
+                            const arrayBuffer = this.result;
+                            const audioData = await audioContext.decodeAudioData(arrayBuffer);
+                            
+                            // Convert to mono and downsample to 16kHz (better for speech recognition)
+                            const monoBuffer = convertToMono(audioData.getChannelData(0));
+                            const downsampledBuffer = downsampleBuffer(monoBuffer, audioData.sampleRate, 16000);
+                            
+                            // Create WAV file
+                            const wavBlob = createWavFile(downsampledBuffer, 16000);
+                            
+                            // Log the size to help with debugging
+                            console.log('Processed audio size:', wavBlob.size, 'bytes');
+                            
+                            // Process the audio through backend
+                            const result = await processAudio(wavBlob);
+                            
+                            // Update status and show response
+                            statusElement.textContent = `You said: ${result.userText}`;
+                            showResponse(result.aiResponse);
+                        } catch (error) {
+                            console.error('Error processing audio data:', error);
+                            statusElement.textContent = 'Error processing audio. Please try again.';
+                        }
+                    };
+                    
+                    fileReader.readAsArrayBuffer(audioBlob);
+                    
+                    // Stop all tracks to release microphone
+                    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                };
+            }
+        }
+        
+        // Function to create WAV file
+        function createWavFile(samples, sampleRate) {
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+            
+            // RIFF chunk descriptor
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            
+            // 'fmt ' subchunk
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); // subchunk size
+            view.setUint16(20, 1, true); // PCM format
+            view.setUint16(22, 1, true); // Mono channel
+            view.setUint32(24, sampleRate, true); // Sample rate
+            view.setUint32(28, sampleRate * 2, true); // Byte rate (sample rate * block align)
+            view.setUint16(32, 2, true); // Block align (channels * bits per sample / 8)
+            view.setUint16(34, 16, true); // Bits per sample
+            
+            // 'data' subchunk
+            writeString(view, 36, 'data');
+            view.setUint32(40, samples.length * 2, true);
+            
+            // Write the PCM samples
+            const volume = 0.7; // Adjust volume for better recognition
+            let index = 44;
+            for (let i = 0; i < samples.length; i++) {
+                view.setInt16(index, samples[i] * 0x7FFF * volume, true);
+                index += 2;
+            }
+            
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+        
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+        
+        // Handle button press for recording
+        recordButton.addEventListener('mousedown', () => {
+            if (!isRecording) {
+                startRecording();
+            }
+        });
+        
+        recordButton.addEventListener('mouseup', () => {
+            if (isRecording) {
+                stopRecording();
+            }
+        });
+        
+        // For touch devices
+        recordButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!isRecording) {
+                startRecording();
+            }
+        });
+        
+        recordButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (isRecording) {
+                stopRecording();
+            }
+        });
+        
+        // Add some interactive eye movement
+        document.addEventListener('mousemove', (e) => {
+            const eyes = document.querySelectorAll('.eye');
+            eyes.forEach(eye => {
+                const x = eye.getBoundingClientRect().left + (eye.clientWidth / 2);
+                const y = eye.getBoundingClientRect().top + (eye.clientHeight / 2);
+                const rad = Math.atan2(e.pageX - x, e.pageY - y);
+                const rot = (rad * (180 / Math.PI) * -1) + 270;
+                eye.style.transform = `rotate(${rot}deg)`;
+            });
+        });
+        
+        // Ensure voices are loaded (needed for some browsers)
+        if ('speechSynthesis' in window) {
+            // Force loading voices
+            const loadVoices = () => {
+                const voices = window.speechSynthesis.getVoices();
+                console.log('Speech synthesis voices loaded:', voices.length);
+            };
+            
+            // Chrome needs the onvoiceschanged event
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            
+            // Try to load voices immediately for other browsers
+            loadVoices();
+        }
+        
+        // Add safety timeout to stop recording if user navigates away without releasing button
+        window.addEventListener('blur', () => {
+            if (isRecording) {
+                stopRecording();
+            }
+        });
+    </script>
+</body>
+</html>
